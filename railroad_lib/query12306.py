@@ -6,10 +6,14 @@ import requests
 import json
 import datetime
 
+import bot_config
+
+header = bot_config.header
+ua = {'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 11_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1'}
+
 def getTrainList(queryDate,from_station,to_station,purpose_codes="ADULT") -> list:
-    ua = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3 Safari/605.1.15'}
     response  = requests.get("https://kyfw.12306.cn/kfzmpt/lcxxcx/query?"\
-        "purpose_codes=%s&queryDate=%s&from_station=%s&to_station=%s"%(purpose_codes,queryDate,from_station,to_station),headers=ua)
+        "purpose_codes=%s&queryDate=%s&from_station=%s&to_station=%s"%(purpose_codes,queryDate,from_station,to_station), headers=header)
     text = response.content.decode('utf-8')
     rawData=text[text.find("{\"train")-1:text.find("],")+1]
     data={}
@@ -20,15 +24,14 @@ def getTrainList(queryDate,from_station,to_station,purpose_codes="ADULT") -> lis
     return data
 
 def getTimeList(train_no,train_date)-> list:
-    response  = requests.get("https://kyfw.12306.cn/kfzmpt/queryTrainInfo/query?leftTicketDTO.train_no=%s&leftTicketDTO.train_date=%s&rand_code="%(train_no,train_date))
+    response  = requests.get("https://kyfw.12306.cn/kfzmpt/queryTrainInfo/query?leftTicketDTO.train_no=%s&leftTicketDTO.train_date=%s&rand_code="%(train_no,train_date), headers=header)
     text = response.content.decode('utf-8')
     rawData=text[text.find("{\"arriv")-1:text.find("},\"messages")]
     data = json.loads(rawData)
     return(data)
 
 def getTicketCheck(trainDate,station_train_code,from_station_telecode) -> str:
-    ua = {'User-Agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 11_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.0 Mobile/15E148 Safari/604.1'}
-    response  = requests.get("https://www.12306.cn/index/otn/index12306/queryTicketCheck?trainDate=%s&station_train_code=%s&from_station_telecode=%s"%(trainDate,station_train_code,from_station_telecode),headers=ua)
+    response  = requests.get("https://www.12306.cn/index/otn/index12306/queryTicketCheck?trainDate=%s&station_train_code=%s&from_station_telecode=%s"%(trainDate,station_train_code,from_station_telecode),headers=header)
     text = response.content.decode('utf-8')
     data = json.loads(text)
     return(data["data"])
@@ -50,7 +53,7 @@ def get_status(train, station, kind) -> requests.Response:
         'czEn': station_encode(station),
     }
     ua = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3 Safari/605.1.15'}
-    return requests.get(url, params, headers=ua)
+    return requests.get(url, params, headers=header)
 
 def print_status(response: requests.Response):
     if response.status_code == 200:
