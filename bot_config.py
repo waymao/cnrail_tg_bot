@@ -17,3 +17,10 @@ header = {
     'Connection': 'keep-alive',
     'DNT': "1"
 }
+
+mysql_info = {
+    "host": "host",
+    "db": "track",
+    "user": "user",
+    "password": "password"
+}

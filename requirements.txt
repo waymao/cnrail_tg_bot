@@ -1,3 +1,6 @@
 python-telegram-bot
 requests
 telegram-calendar-keyboard
+pymysql
+prettytable
+pytz
