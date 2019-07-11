@@ -16,6 +16,7 @@ def get_db_ver():
     match = re.findall(r'\d{4}.\d{2}.\d{2}', js.text)
     return match[0]
 
+# get the image from the moerail server.
 def retrieve_img(bot, update, args):
     if len(args) != 1:
         bot.send_message(chat_id=update.message.chat_id, text="Invalid arguments. Usage: /graph <Train Number>")
