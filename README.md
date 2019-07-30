@@ -24,7 +24,7 @@ After downloading the project, please run:
     │   ├── history.py      - query the history of the train. (for Shanghai and Beijing Railway EMUs.)
     │   ├── timetable.py    - timetable lookup module.
     │   └── train_plan_graph.py - get the planning graph of the train no. using moerail.ml functionality.
-    ├── railroad_lib        - Some helper librarys taken from other projs
+    ├── railroad_lib        - Some helper libraries taken from other projs
     │   ├── __init__.py
     │   ├── query12306.py   - By Lifan Zhang, for timetable function
     │   ├── train_history.py - helper file for train no.
