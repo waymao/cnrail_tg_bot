@@ -40,7 +40,7 @@ def make_message(train_list, no_first):
 def make_trainno_msg(train_list):
     # two trains running on the same day, i.e. chonglian
     if train_list[0]['train_date'] == train_list[1]['train_date']:
-        text = "**{}**车次，由{} **{}-{}** 和 **{}-{}**， 最近一次于 **{}** 执行。".format(
+        text = "**{}**车次，由{} **{}-{}** 和 **{}-{}**重联， 最近一次于 **{}** 执行。".format(
             train_list[0]['train_no'], 
             train_list[0]['company'],
             train_list[0]['train_type'],
@@ -50,7 +50,7 @@ def make_trainno_msg(train_list):
             train_list[0]['train_date']
         )
     else:
-        text = "**{}**车次，由{} **{}-{}**重联， 最近一次于 **{}** 执行。".format(
+        text = "**{}**车次，由{} **{}-{}**， 最近一次于 **{}** 执行。".format(
             train_list[0]['train_no'], 
             train_list[0]['company'],
             train_list[0]['train_type'],
