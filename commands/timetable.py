@@ -39,18 +39,24 @@ def timetable(bot, update, args):
     # Check valid args:
     if len(args) == 0:
         # calendar_func(bot, update)
-        bot.send_message(chat_id=update.message.chat_id, text="The calendar function is being developed.")
+        update.message.reply_text(chat_id=update.message.chat_id, 
+            text="Please enter the train no. \
+                The calendar function is being developed.",
+            reply_to_message_id=update.message.message_id)
     if len(args) == 1:
         date = datetime.now(tz).strftime("%Y-%m-%d")
     elif len(args) != 2:
-        bot.send_message(chat_id=update.message.chat_id, text="Invalid arguments. Usage: /tt <Train Number>")
+        bot.send_message(chat_id=update.message.chat_id, 
+            text="Invalid arguments. Usage: /tt <Train Number>",
+            reply_to_message_id=update.message.message_id)
         return
     else:
         date = args[1]
     
     # Loading...
     text = "Please wait while I retrieve the timetable..."
-    msg = bot.send_message(chat_id=update.message.chat_id, text=text)
+    msg = bot.send_message(chat_id=update.message.chat_id, text=text,
+        reply_to_message_id=update.message.message_id)
 
     train = args[0]
 

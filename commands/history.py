@@ -47,12 +47,14 @@ def make_message(train_list, no_first):
 def train_no(bot, update, args):
     if len(args) == 1:
         # get data
-        msg = bot.send_message(chat_id=update.message.chat_id, text="Loading...")
+        msg = bot.send_message(chat_id=update.message.chat_id, 
+            text="Loading...", reply_to_message_id=update.message.message_id)
         result = train_history.get_train_no_wo_type(args[0])
         data_link_msg = ""
     elif len(args) == 2:
         # get data
-        msg = bot.send_message(chat_id=update.message.chat_id, text="Loading...")
+        msg = bot.send_message(chat_id=update.message.chat_id, 
+            text="Loading...", reply_to_message_id=update.message.message_id)
         result = train_history.get_train_no_w_type(args[1], args[0])
 
         # compute link to data
@@ -63,7 +65,8 @@ def train_no(bot, update, args):
         .format(args[0], args[1], old_time, now_time)
     else:
         bot.send_message(chat_id=update.message.chat_id, 
-            text="Invalid arguments. Usage: /getno <Train Registration> [type]")
+            text="Invalid arguments. Usage: /getno <Train Registration> [type]",
+            reply_to_message_id=update.message.message_id)
         return
     
     if not result:
@@ -82,7 +85,7 @@ def train_no(bot, update, args):
 def train_info(bot, update, args):
     if len(args) == 1:
         msg = bot.send_message(chat_id=update.message.chat_id, 
-            text="Loading...")
+            text="Loading...", reply_to_message_id=update.message.message_id)
         result = train_history.get_train_id(args[0])
 
         # compute link to data
@@ -93,7 +96,8 @@ def train_info(bot, update, args):
         .format(args[0], old_time, now_time)
     else:
         bot.send_message(chat_id=update.message.chat_id, 
-            text="Invalid arguments. Usage: /getreg <Train No> [type]")
+            text="Invalid arguments. Usage: /getreg <Train No> [type]",
+            reply_to_message_id=update.message.message_id)
         return
     
     if not result:
