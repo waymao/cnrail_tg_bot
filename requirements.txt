@@ -1,6 +1,5 @@
-python-telegram-bot
+python-telegram-bot<12
 requests
-telegram-calendar-keyboard
 pymysql
 prettytable
 pytz
