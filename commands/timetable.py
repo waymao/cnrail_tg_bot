@@ -5,6 +5,7 @@
 from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 from railroad_lib import query12306
 from telegram import ReplyKeyboardRemove
+from telegram.ext.dispatcher import run_async
 import requests, json
 import re
 import logging
@@ -33,6 +34,7 @@ def inline_func(bot, update):
 
 # function timetable
 # main handler for the command.
+@run_async
 def timetable(bot, update, args):
     # Check valid args:
     if len(args) == 0:

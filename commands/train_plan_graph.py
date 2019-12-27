@@ -4,6 +4,7 @@
 
 import bot_config
 from telegram.ext import Updater, CommandHandler
+from telegram.ext.dispatcher import run_async
 import telegram.error
 import requests, json
 import re
@@ -17,6 +18,7 @@ def get_db_ver():
     return match[0]
 
 # get the image from the moerail server.
+@run_async
 def retrieve_img(bot, update, args):
     if len(args) != 1:
         bot.send_message(chat_id=update.message.chat_id, text="Invalid arguments. Usage: /graph <Train Number>")

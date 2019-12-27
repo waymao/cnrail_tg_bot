@@ -3,8 +3,10 @@
 # By waymao in 2019
 
 from telegram.ext import Updater, CommandHandler
+from telegram.ext.dispatcher import run_async
 
 # Welcome msg
+@run_async
 def start(bot, update):
     text = 'Hi {}, I\'m a bot, and you can ask me about the chinese railway!'.\
         format(update.message.from_user['username'])

@@ -1,5 +1,6 @@
 import bot_config
 from telegram.ext import Updater, CommandHandler
+from telegram.ext.dispatcher import run_async
 import telegram.error
 import logging
 from railroad_lib import train_history
@@ -42,6 +43,7 @@ def make_message(train_list, no_first):
 
 
 # Handling function for train_no query
+@run_async
 def train_no(bot, update, args):
     if len(args) == 1:
         # get data
@@ -56,9 +58,9 @@ def train_no(bot, update, args):
         # compute link to data
         now_time = datetime.now(tz).strftime("%Y-%m-%d")
         old_time = (datetime.now(tz) - timedelta(days=15)).strftime("%Y-%m-%d")
-        data_link_msg = "\nTo view more history, please [visit here]" + 
-            "(https://t.lifanz.cn/trainhistory.php?train_name={}-{}&daterange={}%2C{})."
-            .format(args[0], args[1], old_time, now_time)
+        data_link_msg = "\nTo view more history, please [visit here]" + \
+        "(https://t.lifanz.cn/trainhistory.php?train_name={}-{}&daterange={}%2C{})."\
+        .format(args[0], args[1], old_time, now_time)
     else:
         bot.send_message(chat_id=update.message.chat_id, 
             text="Invalid arguments. Usage: /getno <Train Registration> [type]")
@@ -76,6 +78,7 @@ def train_no(bot, update, args):
 
 
 # Handling function for train_registration query
+@run_async
 def train_info(bot, update, args):
     if len(args) == 1:
         msg = bot.send_message(chat_id=update.message.chat_id, 
@@ -85,8 +88,8 @@ def train_info(bot, update, args):
         # compute link to data
         now_time = datetime.now(tz).strftime("%Y-%m-%d")
         old_time = (datetime.now(tz) - timedelta(days=15)).strftime("%Y-%m-%d")
-        data_link_msg = "\nTo view more history, please [visit here]" + 
-        "(https://t.lifanz.cn/searchtrain.php?train_num={}&daterange={}%2C{})."
+        data_link_msg = "\nTo view more history, please [visit here]" + \
+        "(https://t.lifanz.cn/searchtrain.php?train_num={}&daterange={}%2C{})."\
         .format(args[0], old_time, now_time)
     else:
         bot.send_message(chat_id=update.message.chat_id, 
