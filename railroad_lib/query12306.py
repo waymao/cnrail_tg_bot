@@ -52,7 +52,6 @@ def get_status(train, station, kind) -> requests.Response:
         'rq': datetime.date.today().isoformat(),
         'czEn': station_encode(station),
     }
-    ua = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0.3 Safari/605.1.15'}
     return requests.get(url, params, headers=header)
 
 def print_status(response: requests.Response):
