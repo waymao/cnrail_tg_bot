@@ -15,8 +15,6 @@ from datetime import datetime
 # Setting appropiate timezone.
 tz = pytz.timezone('Asia/Shanghai')
 
-from telegram_calendar_keyboard import calendar_keyboard
-
 def calendar_func(bot, update):
     update.message.reply_text('Please select a date: ',
                         reply_markup=calendar_keyboard.create_calendar())
