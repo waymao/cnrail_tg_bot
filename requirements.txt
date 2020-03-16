@@ -1,4 +1,5 @@
-python-telegram-bot<12
+python-telegram-bot
+telegram
 requests
 pymysql
 prettytable

@@ -19,19 +19,19 @@ def get_db_ver():
 
 # get the image from the moerail server.
 @run_async
-def retrieve_img(bot, update, args):
-    if len(args) != 1:
-        bot.send_message(chat_id=update.message.chat_id, 
+def retrieve_img(update, context):
+    if len(context.args) != 1:
+        context.bot.send_message(chat_id=update.message.chat_id,
             text="Invalid arguments. Usage: /graph <Train Number>",
             reply_to_message_id=update.message.message_id)
         return
     
     # get train num from arguments
-    train_no = args[0].upper()
+    train_no = context.args[0].upper()
 
     # if it's not C, G or D, just exit.
     if train_no[0] not in ['C', 'G', 'D']:
-        bot.send_message(chat_id=update.message.chat_id, 
+        context.bot.send_message(chat_id=update.message.chat_id,
             text="Sorry, Graphs for Non-EMU trains are not available.",
             reply_to_message_id=update.message.message_id)
         return
@@ -42,28 +42,28 @@ def retrieve_img(bot, update, args):
 
     # Success:
     if response.status_code == 200:
-        msg = bot.send_message(chat_id=update.message.chat_id,
+        msg = context.bot.send_message(chat_id=update.message.chat_id,
               text="Loading the image...")
         db_version = get_db_ver()
         try:
-            bot.send_photo(update.message.chat_id, url,
+            context.bot.send_photo(update.message.chat_id, url,
             reply_to_message_id=update.message.message_id)
         except telegram.error.TimedOut:
-            bot.send_message(chat_id=update.message.chat_id,
+            context.bot.send_message(chat_id=update.message.chat_id,
               text="If you don\'t see the photo, please wait a few sec for it to upload.",
               reply_to_message_id=update.message.message_id)
             pass
-        bot.edit_message_text(chat_id=update.message.chat_id, 
+        context.bot.edit_message_text(chat_id=update.message.chat_id,
                          message_id = msg.message_id,
             text='The planning graph is last updated on {}.'.format(db_version))
     # Train not found:
     elif response.status_code == 404:
-        bot.send_message(chat_id=update.message.chat_id, 
+        context.bot.send_message(chat_id=update.message.chat_id,
             text='Sorry, this train is not included in the db.',
             reply_to_message_id=update.message.message_id)
     # Some other weird error:
     else:
-        bot.send_message(chat_id=update.message.chat_id, 
+        context.bot.send_message(chat_id=update.message.chat_id,
             text='Sorry, there\'s some error with the moerail server.',
             reply_to_message_id=update.message.message_id)
 

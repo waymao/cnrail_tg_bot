@@ -15,48 +15,36 @@ from datetime import datetime
 # Setting appropiate timezone.
 tz = pytz.timezone('Asia/Shanghai')
 
-def calendar_func(bot, update):
-    update.message.reply_text('Please select a date: ',
-                        reply_markup=calendar_keyboard.create_calendar())
-
-def inline_func(bot, update):
-    result = calendar_keyboard.process_calendar_selection(bot, update)
-    if result[0]:
-        date = result[1]
-        bot.send_message(chat_id=update.callback_query.from_user.id,
-                        text='You selected {}'.format(date.strftime("%Y/%m/%d")),
-                        reply_markup=ReplyKeyboardRemove())
-
 #train_info = TrainNoDB()
 #train_info.update()
 
 # function timetable
 # main handler for the command.
 @run_async
-def timetable(bot, update, args):
+def timetable(update, context):
     # Check valid args:
-    if len(args) == 0:
+    if len(context.args) == 0:
         # calendar_func(bot, update)
         update.message.reply_text(chat_id=update.message.chat_id, 
             text="Please enter the train no. \
                 The calendar function is being developed.",
             reply_to_message_id=update.message.message_id)
-    if len(args) == 1:
+    if len(context.args) == 1:
         date = datetime.now(tz).strftime("%Y-%m-%d")
-    elif len(args) != 2:
-        bot.send_message(chat_id=update.message.chat_id, 
+    elif len(context.args) != 2:
+        context.bot.send_message(chat_id=update.message.chat_id,
             text="Invalid arguments. Usage: /tt <Train Number>",
             reply_to_message_id=update.message.message_id)
         return
     else:
-        date = args[1]
+        date = context.args[1]
     
     # Loading...
     text = "Please wait while I retrieve the timetable..."
-    msg = bot.send_message(chat_id=update.message.chat_id, text=text,
+    msg = context.bot.send_message(chat_id=update.message.chat_id, text=text,
         reply_to_message_id=update.message.message_id)
 
-    train = args[0]
+    train = context.args[0]
 
     try:
         # Calling lfz's code
@@ -80,17 +68,17 @@ def timetable(bot, update, args):
             )
         
         # Edit message, replace placeholder
-        bot.edit_message_text(chat_id=update.message.chat_id, text=result_str, message_id=msg.message_id)
+        context.bot.edit_message_text(chat_id=update.message.chat_id, text=result_str, message_id=msg.message_id)
     
     # Error Handling.
     # KeyError: somehow 12306 returned something with status code != 200
     except (KeyError, json.JSONDecodeError):
-        bot.edit_message_text(chat_id=update.message.chat_id,
+        context.bot.edit_message_text(chat_id=update.message.chat_id,
             text="Sorry, there is no such train no or the train does not run this day.",
             message_id=msg.message_id)
     # ConnectionError, Timeout: cannot access 12306
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-        bot.edit_message_text(chat_id=update.message.chat_id,
+        context.bot.edit_message_text(chat_id=update.message.chat_id,
             text="Sorry. Could not establish a secure connection to the 12306 server.",
             message_id=msg.message_id)
     # Not found or blocked?
@@ -98,11 +86,11 @@ def timetable(bot, update, args):
         status_code = e.response.status_code
         if status_code == 404:
             # a guess
-            bot.edit_message_text(chat_id=update.message.chat_id,
+            context.bot.edit_message_text(chat_id=update.message.chat_id,
                 text="Sorry, there is no such train no or the train does not run this day.",
                 message_id=msg.message_id)
         else:
-            bot.edit_message_text(chat_id=update.message.chat_id,
+            context.bot.edit_message_text(chat_id=update.message.chat_id,
                 text="Sorry. Could not establish a connection to the 12306 server.",
                 message_id=msg.message_id)
     
@@ -111,4 +99,3 @@ def timetable(bot, update, args):
 
 # Add handler for the functions.
 timetable_handler = CommandHandler('tt', timetable, pass_args=True)
-calendar_handler = CallbackQueryHandler(inline_func, pass_user_data=False)

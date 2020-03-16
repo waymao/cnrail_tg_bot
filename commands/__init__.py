@@ -7,7 +7,6 @@ from . import basics, timetable, train_plan_graph, history
 handlers = [
     basics.start_handler,
     timetable.timetable_handler,
-    timetable.calendar_handler,
     train_plan_graph.graph_handler,
     history.train_info_handler,
     history.train_no_handler

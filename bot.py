@@ -6,7 +6,7 @@ from telegram.ext import Updater, CommandHandler
 import bot_config, bot_logging
 import commands
 
-updater = Updater(token=bot_config.TG_TOKEN)
+updater = Updater(token=bot_config.TG_TOKEN, use_context=True)
 
 # add handlers to the commands.
 for handler in commands.handlers:

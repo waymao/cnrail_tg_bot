@@ -44,37 +44,37 @@ def make_message(train_list, no_first):
 
 # Handling function for train_no query
 @run_async
-def train_no(bot, update, args):
-    if len(args) == 1:
+def train_no(update, context):
+    if len(context.args) == 1:
         # get data
-        msg = bot.send_message(chat_id=update.message.chat_id, 
+        msg = context.bot.send_message(chat_id=update.message.chat_id,
             text="Loading...", reply_to_message_id=update.message.message_id)
-        result = train_history.get_train_no_wo_type(args[0])
+        result = train_history.get_train_no_wo_type(context.args[0])
         data_link_msg = ""
-    elif len(args) == 2:
+    elif len(context.args) == 2:
         # get data
-        msg = bot.send_message(chat_id=update.message.chat_id, 
+        msg = context.bot.send_message(chat_id=update.message.chat_id,
             text="Loading...", reply_to_message_id=update.message.message_id)
-        result = train_history.get_train_no_w_type(args[1], args[0])
+        result = train_history.get_train_no_w_type(context.args[1], context.args[0])
 
         # compute link to data
         now_time = datetime.now(tz).strftime("%Y-%m-%d")
         old_time = (datetime.now(tz) - timedelta(days=15)).strftime("%Y-%m-%d")
         data_link_msg = "\nTo view more history, please [visit here]" + \
         "(https://t.lifanz.cn/trainhistory.php?train_name={}-{}&daterange={}%2C{})."\
-        .format(args[0], args[1], old_time, now_time)
+        .format(context.args[0], context.args[1], old_time, now_time)
     else:
-        bot.send_message(chat_id=update.message.chat_id, 
+        context.bot.send_message(chat_id=update.message.chat_id,
             text="Invalid arguments. Usage: /getno <Train Registration> [type]",
             reply_to_message_id=update.message.message_id)
         return
     
     if not result:
-        bot.edit_message_text(chat_id=update.message.chat_id, 
+        context.bot.edit_message_text(chat_id=update.message.chat_id,
             text="Your query did not return any results.", 
             message_id = msg.message_id)
     else:
-        bot.edit_message_text(chat_id=update.message.chat_id, 
+        context.bot.edit_message_text(chat_id=update.message.chat_id,
             text=make_message(result, True) + data_link_msg, 
             parse_mode=telegram.ParseMode.MARKDOWN, 
             message_id = msg.message_id)
@@ -82,30 +82,30 @@ def train_no(bot, update, args):
 
 # Handling function for train_registration query
 @run_async
-def train_info(bot, update, args):
-    if len(args) == 1:
-        msg = bot.send_message(chat_id=update.message.chat_id, 
+def train_info(update, context):
+    if len(context.args) == 1:
+        msg = context.bot.send_message(chat_id=update.message.chat_id,
             text="Loading...", reply_to_message_id=update.message.message_id)
-        result = train_history.get_train_id(args[0])
+        result = train_history.get_train_id(context.args[0])
 
         # compute link to data
         now_time = datetime.now(tz).strftime("%Y-%m-%d")
         old_time = (datetime.now(tz) - timedelta(days=15)).strftime("%Y-%m-%d")
         data_link_msg = "\nTo view more history, please [visit here]" + \
         "(https://t.lifanz.cn/searchtrain.php?train_num={}&daterange={}%2C{})."\
-        .format(args[0], old_time, now_time)
+        .format(context.args[0], old_time, now_time)
     else:
-        bot.send_message(chat_id=update.message.chat_id, 
+        context.bot.send_message(chat_id=update.message.chat_id,
             text="Invalid arguments. Usage: /getreg <Train No> [type]",
             reply_to_message_id=update.message.message_id)
         return
     
     if not result:
-        bot.edit_message_text(chat_id=update.message.chat_id, 
+        context.bot.edit_message_text(chat_id=update.message.chat_id,
             text="Your query did not return any results.", 
             message_id = msg.message_id)
     else:
-        bot.edit_message_text(chat_id=update.message.chat_id, 
+        context.bot.edit_message_text(chat_id=update.message.chat_id,
             text=make_message(result, False) + data_link_msg, 
             parse_mode=telegram.ParseMode.MARKDOWN, message_id = msg.message_id)
 
