@@ -4,6 +4,7 @@
 
 import requests
 import json
+import dateutil.parser
 
 header = {
     'Host': 'wifi.12306.cn',
@@ -24,6 +25,11 @@ def json_parser(rawData):
         return ['NO_DATA', rawData]
     return data
 
+def date_to_string(date_input):
+    return dateutil.parser.parse(date_input).strftime("%Y-%m-%d")
+
+def date_to_integer(date_input):
+    return dateutil.parser.parse(date_input).strftime("%Y%m%d")
 
 def getTrainListFromToStationName(queryDate,fromStationName,toStationName) -> list:
     response = requests.get("https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByStationName?fromStationName=%s&toStationName=%s&trainDate=%s "%(fromStationName,toStationName,queryDate), headers=header)
@@ -48,12 +54,17 @@ def getStoptimeByStationName(fromStationName, toStationName, trainDate) -> list:
 
 def getStoptimeByTrainCode(trainCode, trainDate, getBigScreen='YES') -> list:
     '''
-    Note: some trains can only be retrieved from '20211011'. Query with '2021-10-11' returns nothing.
+    Note: Use 'yyyymmdd' only. Query with 'yyyy-mm-dd' could return expired data.
     '''
     response = requests.get("https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByTrainCode?trainCode=%s&trainDate=%s&getBigScreen=%s"%(trainCode, trainDate, getBigScreen), headers=header)
     return json_parser(response.content.decode('utf-8'))
 
 def queryStoptimeByStationCode(stationCode, trainDate):
+    '''
+    Note: Use 'yyyymmdd' only. Query with 'yyyy-mm-dd' could return expired data.
+    Only data after 2021-01-20 have infomation about trains' start/end stations.
+    Before 2021-01-19, data
+    '''
     response = requests.get("https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByStationCodeAndDate?stationCode=%s&trainDate=%s"%(stationCode, trainDate), headers=header)
     return json_parser(response.content.decode('utf-8'))
 
@@ -71,7 +82,7 @@ def getTrainEquipmentByTrainNo(trainNo) -> list:
 
 def getTrainCompileListByTrainNo(trainNo) -> list:
     '''
-        queryTrainCompileListByTrainNo('800000D9300A') returns 
+        queryTrainCompileListByTrainNo('800000D9300A') returns
         [{'startDate': '20190105', 'trainNo': '800000D9300A', 'coachNo': '01', 'stopDate': '20401231', 'coachType': 'RW    ', 'limit1': 40, 'limit2': 0, 'commentCode': ' ', 'trainGroupNo': 0, 'origin': 'M1', 'runningStyle': 1, 'runningRule': 1, 'seatFeature': '3'}, {'startDate': '20190105', 'trainNo': '800000D9300A', 'coachNo': '02', 'stopDate': '20401231', 'coachType': 'RW    ', 'limit1': 60, 'limit2': 0, 'commentCode': ' ', 'trainGroupNo': 0, 'origin': 'M1', 'runningStyle': 1, 'runningRule': 1, 'seatFeature': '3'}, ...]
     '''
     response = requests.get("https://wifi.12306.cn/wifiapps/ticket/api/trainDetailInfo/queryTrainCompileListByTrainNo?trainNo=%s"%trainNo, headers=header)
@@ -94,7 +105,8 @@ def getBigScreenByLocation(latitude, longitude, DA_type='D'):
 
 def getBigScreenByStationCodeAndDate(stationCode, queryDate, DA_type='A') -> list:
     '''
-    status: 1=正在候车, 2=正在检票, 3=停检, 4=正点, 5=晚点, 8=停运
+    queryDate must be "yyyymmdd"
+    status: 1=正在候车, 2=正在检票, 3=停检, 4=正点, 5=晚点, 6=预计晚点, 7=已到站, 8=停运
     '''
     response = requests.get("https://wifi.12306.cn/wifiapps/appFrontEnd/v2/kpBigScreen/getBigScreenByStationCodeAndTrainDate?stationCode=%s&trainDate=%s&type=%s"%(stationCode, queryDate, DA_type), headers=header)
     return json_parser(response.content.decode('utf-8'))
@@ -107,12 +119,17 @@ def test_module(label, response, answer):
 
 if __name__ == '__main__':
     test_module("getTrainListFromToStationName", getTrainListFromToStationName('202110-01','北京','奇峰塔'), [{'fromStationCode': 'BXP', 'fromStationName': '北京西', 'fromStationDate': '202110-01 ', 'fromStationArriveTime': '1745', 'fromStationDepartTime': '1745', 'fromStationArriveDateTime': 1633039500000, 'fromStationDepartDateTime': 1633039500000, 'fromStationNo': '01', 'fromTrainCode': '6437', 'isStartStation': True, 'fromStationDistance': 0, 'toStationCode': 'QVP', 'toStationName': '奇峰塔', 'toStationArriveTime': '2143', 'toStationDepartTime': '2145', 'toStationDate': '202110-01 ', 'toStationArriveDateTime': 1633063380000, 'toStationDepartDateTime': 1633063500000, 'toStationNo': '18', 'toTrainCode': '6437', 'trainNo': '24000064370K', 'isEndStation': False, 'toStationDistance': 149, 'dayDifference': 0, 'travelDistance': 149, 'travelTimeSpan': 23880000}])
-    
-    test_module("getStoptimeByStationName", getStoptimeByStationName('深圳', '苏州', '20211003'), [{'fromStationCode': 'IOQ', 'fromStationName': '深圳北', 'fromStationDate': '20211003', 'fromStationArriveTime': '0950', 'fromStationDepartTime': '0950', 'fromStationArriveDateTime': 1633225800000, 'fromStationDepartDateTime': 1633225800000, 'fromStationNo': '01', 'fromTrainCode': 'D2282', 'isStartStation': True, 'fromStationDistance': 0, 'toStationCode': 'SZH', 'toStationName': '苏州', 'toStationArriveTime': '2153', 'toStationDepartTime': '2155', 'toStationDate': '20211003', 'toStationArriveDateTime': 1633269180000, 'toStationDepartDateTime': 1633269300000, 'toStationNo': '28', 'toTrainCode': 'D2282', 'trainNo': '6i000D22820F', 'isEndStation': False, 'toStationDistance': 1707, 'dayDifference': 0, 'travelDistance': 1707, 'travelTimeSpan': 43380000, 'controlledTrainFlag': '0', 'controlledTrainMessage': '正常车次，不受控'}, {'fromStationCode': 'SZQ', 'fromStationName': '深圳', 'fromStationDate': '20211003', 'fromStationArriveTime': '1206', 'fromStationDepartTime': '1206', 'fromStationArriveDateTime': 1633233960000, 'fromStationDepartDateTime': 1633233960000, 'fromStationNo': '01', 'fromTrainCode': 'K34', 'isStartStation': True, 'fromStationDistance': 0, 'toStationCode': 'SZH', 'toStationName': '苏州', 'toStationArriveTime': '1152', 'toStationDepartTime': '1152', 'toStationDate': '20211004', 'toStationArriveDateTime': 1633319520000, 'toStationDepartDateTime': 1633319520000, 'toStationNo': '15', 'toTrainCode': 'K35', 'trainNo': '6500000K3409', 'isEndStation': True, 'toStationDistance': 1725, 'dayDifference': 1, 'travelDistance': 1725, 'travelTimeSpan': 85560000, 'controlledTrainFlag': '0', 'controlledTrainMessage': '正常车次，不受控'}])
 
+    # test_module("getStoptimeByStationName", getStoptimeByStationName('深圳', '苏州', '20211003'), [{'fromStationCode': 'IOQ', 'fromStationName': '深圳北', 'fromStationDate': '20211003', 'fromStationArriveTime': '0950', 'fromStationDepartTime': '0950', 'fromStationArriveDateTime': 1633225800000, 'fromStationDepartDateTime': 1633225800000, 'fromStationNo': '01', 'fromTrainCode': 'D2282', 'isStartStation': True, 'fromStationDistance': 0, 'toStationCode': 'SZH', 'toStationName': '苏州', 'toStationArriveTime': '2153', 'toStationDepartTime': '2155', 'toStationDate': '20211003', 'toStationArriveDateTime': 1633269180000, 'toStationDepartDateTime': 1633269300000, 'toStationNo': '28', 'toTrainCode': 'D2282', 'trainNo': '6i000D22820F', 'isEndStation': False, 'toStationDistance': 1707, 'dayDifference': 0, 'travelDistance': 1707, 'travelTimeSpan': 43380000, 'controlledTrainFlag': '0', 'controlledTrainMessage': '正常车次，不受控'}, {'fromStationCode': 'SZQ', 'fromStationName': '深圳', 'fromStationDate': '20211003', 'fromStationArriveTime': '1206', 'fromStationDepartTime': '1206', 'fromStationArriveDateTime': 1633233960000, 'fromStationDepartDateTime': 1633233960000, 'fromStationNo': '01', 'fromTrainCode': 'K34', 'isStartStation': True, 'fromStationDistance': 0, 'toStationCode': 'SZH', 'toStationName': '苏州', 'toStationArriveTime': '1152', 'toStationDepartTime': '1152', 'toStationDate': '20211004', 'toStationArriveDateTime': 1633319520000, 'toStationDepartDateTime': 1633319520000, 'toStationNo': '15', 'toTrainCode': 'K35', 'trainNo': '6500000K3409', 'isEndStation': True, 'toStationDistance': 1725, 'dayDifference': 1, 'travelDistance': 1725, 'travelTimeSpan': 85560000, 'controlledTrainFlag': '0', 'controlledTrainMessage': '正常车次，不受控'}])
+    test_module("getStoptimeByStationName", getStoptimeByStationName('深圳', '苏州', '20211003'), [{'fromStationCode': 'IOQ', 'fromStationName': '深圳北', 'fromStationDate': '20211003', 'fromStationArriveTime': '0950', 'fromStationDepartTime': '0950', 'fromStationArriveDateTime': 1633225800000, 'fromStationDepartDateTime': 1633225800000, 'fromStationNo': '01', 'fromTrainCode': 'D2282', 'isStartStation': True, 'fromStationDistance': 0, 'toStationCode': 'SZH', 'toStationName': '苏州', 'toStationArriveTime': '2153', 'toStationDepartTime': '2155', 'toStationDate': '20211003', 'toStationArriveDateTime': 1633269180000, 'toStationDepartDateTime': 1633269300000, 'toStationNo': '28', 'toTrainCode': 'D2282', 'trainNo': '6i000D22820F', 'isEndStation': False, 'toStationDistance': 1707, 'dayDifference': 0, 'travelDistance': 1707, 'travelTimeSpan': 43380000}, {'fromStationCode': 'SZQ', 'fromStationName': '深圳', 'fromStationDate': '20211003', 'fromStationArriveTime': '1206', 'fromStationDepartTime': '1206', 'fromStationArriveDateTime': 1633233960000, 'fromStationDepartDateTime': 1633233960000, 'fromStationNo': '01', 'fromTrainCode': 'K34', 'isStartStation': True, 'fromStationDistance': 0, 'toStationCode': 'SZH', 'toStationName': '苏州', 'toStationArriveTime': '1152', 'toStationDepartTime': '1152', 'toStationDate': '20211004', 'toStationArriveDateTime': 1633319520000, 'toStationDepartDateTime': 1633319520000, 'toStationNo': '15', 'toTrainCode': 'K35', 'trainNo': '6500000K3409', 'isEndStation': True, 'toStationDistance': 1725, 'dayDifference': 1, 'travelDistance': 1725, 'travelTimeSpan': 85560000}])
+    # querying with yyyy-mm-dd is deprecated, see:
     test_module("getStoptimeByTrainCode", getStoptimeByTrainCode('Z29', '2021-09-30'), [{'trainDate': '2021-09-30', 'startDate': '20201012', 'stopDate': '20210119', 'trainNo': '2400000Z290F', 'stationNo': '01', 'stationName': '北京', 'bureauCode': 'P', 'stationTelecode': 'BJP', 'stationTrainCode': 'Z29', 'dayDifference': 0, 'arriveTime': '2133', 'arriveTimestamp': 1607560380000, 'startTime': '2133', 'startTimestamp': 1607560380000, 'ticketDelay': 0, 'waitingRoom': '-', 'wicket': '-', 'distance': 0, 'timeSpan': 0, 'oneStationCrossDay': False}, {'trainDate': '20201210', 'startDate': '20201012', 'stopDate': '20210119', 'trainNo': '2400000Z290F', 'stationNo': '02', 'stationName': '扬州', 'bureauCode': 'H', 'stationTelecode': 'YLH', 'stationTrainCode': 'Z29', 'dayDifference': 1, 'arriveTime': '0800', 'arriveTimestamp': 1607558400000, 'startTime': '0800', 'startTimestamp': 1607558400000, 'ticketDelay': 0, 'waitingRoom': '-', 'wicket': '-', 'distance': 1228, 'timeSpan': 37620000, 'oneStationCrossDay': False}])
-
-    test_module("queryStoptimeByStationCode", queryStoptimeByStationCode('XPH', '2021-09-15'), [{'trainNo': '5l000G711070', 'trainCode': 'G7110', 'stationName': '仙林', 'stationCode': 'XPH', 'arriveTime': '1444', 'departTime': '1449'}, {'trainNo': '54000G704571', 'trainCode': 'G7045', 'stationName': '仙林', 'stationCode': 'XPH', 'arriveTime': '0938', 'departTime': '0940'}])
+    # where the correct query goes
+    test_module("getStoptimeByTrainCode_Correct", getStoptimeByTrainCode('Z29', '20210930'), [{'trainDate': '20210930', 'startDate': '20210120', 'stopDate': '20501231', 'trainNo': '2400000Z290G', 'stationNo': '01', 'stationName': '北京', 'bureauCode': 'P', 'stationTelecode': 'BJP', 'stationTrainCode': 'Z29', 'dayDifference': 0, 'arriveTime': '2133', 'arriveTimestamp': 1633008780000, 'startTime': '2133', 'startTimestamp': 1633008780000, 'ticketDelay': 0, 'waitingRoom': '-', 'wicket': '-', 'distance': 0, 'timeSpan': 0, 'oneStationCrossDay': False}, {'trainDate': '20211001', 'startDate': '20210120', 'stopDate': '20501231', 'trainNo': '2400000Z290G', 'stationNo': '02', 'stationName': '明光', 'bureauCode': 'H', 'stationTelecode': 'MGH', 'stationTrainCode': 'Z29', 'dayDifference': 1, 'arriveTime': '0622', 'arriveTimestamp': 1633040520000, 'startTime': '0626', 'startTimestamp': 1633040760000, 'ticketDelay': 0, 'waitingRoom': '-', 'wicket': '-', 'distance': 1040, 'timeSpan': 31740000, 'oneStationCrossDay': False}, {'trainDate': '20211001', 'startDate': '20210120', 'stopDate': '20501231', 'trainNo': '2400000Z290G', 'stationNo': '03', 'stationName': '扬州', 'bureauCode': 'H', 'stationTelecode': 'YLH', 'stationTrainCode': 'Z29', 'dayDifference': 1, 'arriveTime': '0800', 'arriveTimestamp': 1633046400000, 'startTime': '0800', 'startTimestamp': 1633046400000, 'ticketDelay': 0, 'waitingRoom': '-', 'wicket': '-', 'distance': 1228, 'timeSpan': 37620000, 'oneStationCrossDay': False}])
+    # also note that only yyyymmdd returns correctly; yyyy-mm-dd returns expired data.
+    test_module("queryStoptimeByStationCode_old", queryStoptimeByStationCode('XPH', '20210119'), [{'trainNo': '5l000G711070', 'trainCode': 'G7110', 'stationName': '仙林', 'stationCode': 'XPH', 'arriveTime': '1444', 'departTime': '1449'}, {'trainNo': '54000G704571', 'trainCode': 'G7045', 'stationName': '仙林', 'stationCode': 'XPH', 'arriveTime': '0938', 'departTime': '0940'}])
+    # only later data have startStation
+    test_module("queryStoptimeByStationCode_new", queryStoptimeByStationCode('XPH', '20210120'), [{'trainNo': '5l000G711070', 'trainCode': 'G7110', 'stationName': '仙林', 'stationCode': 'XPH', 'arriveTime': '1444', 'departTime': '1449'}, {'trainNo': '54000G711151', 'trainCode': 'G7111', 'stationName': '仙林', 'stationCode': 'XPH', 'startStationName': '南京', 'startStationCode': 'NJH', 'endStationName': '上海虹桥', 'endStationCode': 'AOH', 'arriveTime': '1039', 'departTime': '1040'}])
 
     test_module("getRunRuleByTrainNoAndDateRange", getRunRuleByTrainNoAndDateRange('6i0000D9280P',20210919,20210922), {'20210921': '1', '20210920': '0', '20210922': '0', '20210919': '0'})
 

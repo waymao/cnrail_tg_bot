@@ -4,3 +4,4 @@ requests
 pymysql
 prettytable
 pytz
+python-dateutil

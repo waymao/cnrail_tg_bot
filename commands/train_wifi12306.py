@@ -3,11 +3,11 @@
 # By AgFlore in 2021 based on waymao's work.
 
 import logging
-import pytz
 from datetime import datetime
+import pytz
+from telegram import ParseMode
 from telegram.ext import CommandHandler
 from railroad_lib import query_wifi12306
-from telegram import ParseMode
 
 # Setting appropiate timezone.
 tz = pytz.timezone('Asia/Shanghai')
@@ -18,25 +18,27 @@ def parse_timetable(train_data):
 
         station_date = ''
         for one_station in train_data:
-            if (one_station["trainDate"] != station_date):
+            if one_station.setdefault("trainDate", '?') != station_date:
                 station_date = one_station["trainDate"]
                 result_str += "   (%s)\n"%(station_date)
-            
+
             # Sample line: "08 西安　　0940/0948 1509㎞ Z217 晚750分"
-            delay_status = one_station['ticketDelay']
-            delay_str = one_station["stationTrainCode"]
-            if one_station['ticketDelay']:
+            delay_status = one_station.get('ticketDelay')
+            delay_str = one_station.get("stationTrainCode")
+            if delay_status:
                 if delay_status == -1:
                     delay_str += " 晚点未定"
-                else: 
+                elif delay_status == -2:
+                    delay_str += " 停运"
+                else:
                     delay_str += " 晚%s分"%(delay_status)
 
             result_str += "{} {}{}/{}\t{}㎞\t{}\n".format(
-                one_station["stationNo"],
-                one_station["stationName"].ljust(4, '　'),
-                one_station["arriveTime"],
-                one_station["startTime"],
-                str(one_station['distance']).rjust(4),
+                one_station.get("stationNo"),
+                one_station.get("stationName").ljust(4, '　'),
+                one_station.get("arriveTime", '----'),
+                one_station.get("startTime", '----'),
+                str(one_station.get('distance')).rjust(4),
                 delay_str
             )
         result_str += "</pre>"
@@ -59,7 +61,7 @@ def parse_guide(train_data):
         if this_station_info:
             # Sample line: "(SZH) 苏州 [候]普速东候车区,普速西候车区 [检]5A检票口 [出]南1出站口,南2出站口"
             guide_payload += "(%s) %s\t%s\n" % (
-                one_station["stationTelecode"], one_station["stationName"], this_station_info)
+                one_station.get("stationTelecode"), one_station.get("stationName"), this_station_info)
     # Print block only if it has content
     if guide_payload:
         result_str = "Traveller's Guide:\n%s\n" % (guide_payload)
@@ -70,23 +72,23 @@ def parse_guide(train_data):
 def parse_compilation(train_no):
     '''
     Return sample:
-    Compilation: 
-    01(P1) KD    0    
-    02(P1) YZ    118  
-    03(P1) YZ    118  
+    Compilation:
+    01(P1) KD    0
+    02(P1) YZ    118
+    03(P1) YZ    118
     04(P1) YZ    112 D
-    05(P1) YW    66   
+    05(P1) YW    66
     '''
     train_compile = query_wifi12306.getTrainCompileListByTrainNo(train_no)
     if train_compile and (train_compile[0] != 'NO_DATA'):
         result_str = "Compilation: \n"
         for one_train in train_compile:
             result_str += "{}({}) {}{} {}\n".format(
-                one_train['coachNo'], 
-                one_train['origin'], 
-                one_train['coachType'], 
-                str(one_train['limit1']).ljust(3), 
-                one_train['commentCode'])
+                one_train.get('coachNo'),
+                one_train.get('origin'),
+                one_train.get('coachType'),
+                str(one_train.get('limit1')).ljust(3),
+                one_train.get('commentCode'))
         return result_str
     return ""
 
@@ -102,10 +104,9 @@ def parse_equipment(train_no):
 def train_wifi(update, context):
     # Check valid args:
     if len(context.args) == 0:
-        update.message.reply_text(chat_id=update.message.chat_id, 
-            text="Please enter the train no. \
-                The calendar function is being developed.",
-            reply_to_message_id=update.message.message_id)
+        update.message.reply_text(text="Usage: `/train <Train No.> [Date]`\n\nNote: This command returns the scheduled timetable, which does not guarantee that the train actually runs on the date; you may use `/tt` for cross reference :D",
+            reply_to_message_id=update.message.message_id, parse_mode=ParseMode.MARKDOWN_V2)
+        return
     if len(context.args) == 1:
         date = datetime.now(tz).strftime("%Y%m%d")
     elif len(context.args) != 2:
@@ -114,9 +115,8 @@ def train_wifi(update, context):
             reply_to_message_id=update.message.message_id)
         return
     else:
-        # Because some trains are not accessible by "yyyy-mm-dd"; only "yyyymmdd" gets response
-        date = context.args[1].replace('-', '')
-        
+        date = query_wifi12306.date_to_integer(context.args[1])
+
     # Loading...
     text = "Please wait while I retrieve the timetable..."
     msg = context.bot.send_message(chat_id=update.message.chat_id, text=text,
@@ -128,21 +128,21 @@ def train_wifi(update, context):
         result_str = parse_timetable(train_data)
         result_str += "\n<pre>%s</pre><pre>%s (%s - %s)\n%s</pre>\n<pre>%s</pre>"%(
             parse_guide(train_data),
-            train_data[0]["trainNo"], 
-            train_data[0]['startDate'], 
-            train_data[0]['stopDate'], 
-            parse_compilation(train_data[0]["trainNo"]),
-            parse_equipment(train_data[0]["trainNo"]))
+            train_data[0].get("trainNo"),
+            train_data[0].get('startDate'),
+            train_data[0].get('stopDate'),
+            parse_compilation(train_data[0].get("trainNo")),
+            parse_equipment(train_data[0].get("trainNo")))
 
         # Edit message, replace placeholder
         context.bot.edit_message_text(chat_id=update.message.chat_id, text=result_str, message_id=msg.message_id, parse_mode=ParseMode.HTML)
-    
+
     # Error Handling.
     else:
         context.bot.edit_message_text(chat_id=update.message.chat_id,
             text=train_data[1],
             message_id=msg.message_id)
-    
+
     # Logs down each query.
     logging.info("User %s (id: %s) searched for %s on %s", update.message.from_user.username, update.message.from_user.id, train_code, date)
 
