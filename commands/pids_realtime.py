@@ -1,5 +1,5 @@
-# train_wifi12306.py
-# Used to search for timetable on com.wifi12306 .
+# pids_realtime.py
+# Used to get station's real-time PIDS board from com.wifi12306
 # By AgFlore in 2021 based on waymao's work.
 
 import logging
@@ -45,9 +45,9 @@ def parse_screen_line(line, ignore_ok=""):
     else:
         train_time = timestamp_to_clock(line.get('departTime')).strftime("%H:%M")
     # Parse the train status
-    statuses = {1:'候车', 2:'开检', 3:'停检', 4:'正点', 5:'晚点', 6:'预计晚点', 7:'到站', 8:'停运'}
+    # statuses = {1:'候车', 2:'开检', 3:'停检', 4:'正点', 5:'晚点', 6:'预计晚点', 7:'到站', 8:'停运'}
     status_code = line.get('status', 0)
-    status_str = statuses.get(status_code, status_code)
+    status_str = query_wifi12306.bigscreen_status_dict.get(status_code, status_code)
     delay_code = line.get('delay')
     if delay_code and status_code not in [5, 8]:
         if isinstance(delay_code, int) and delay_code<0:

@@ -2,8 +2,8 @@
 # looks for timetable on com.wifi12306.
 # Modified by AgFlore from lfz's version
 
-import requests
 import json
+import requests
 import dateutil.parser
 
 header = {
@@ -62,8 +62,7 @@ def getStoptimeByTrainCode(trainCode, trainDate, getBigScreen='YES') -> list:
 def queryStoptimeByStationCode(stationCode, trainDate):
     '''
     Note: Use 'yyyymmdd' only. Query with 'yyyy-mm-dd' could return expired data.
-    Only data after 2021-01-20 have infomation about trains' start/end stations.
-    Before 2021-01-19, data
+    Only data after 2021-01-20 include infomation about trains' start/end stations.
     '''
     response = requests.get("https://wifi.12306.cn/wifiapps/ticket/api/stoptime/queryByStationCodeAndDate?stationCode=%s&trainDate=%s"%(stationCode, trainDate), headers=header)
     return json_parser(response.content.decode('utf-8'))
@@ -88,6 +87,45 @@ def getTrainCompileListByTrainNo(trainNo) -> list:
     response = requests.get("https://wifi.12306.cn/wifiapps/ticket/api/trainDetailInfo/queryTrainCompileListByTrainNo?trainNo=%s"%trainNo, headers=header)
     return json_parser(response.content.decode('utf-8'))
 
+# For interpreting the "commentCode"
+# TBA:
+# 'E' appeared once in 26000K77520E (YW25G, capacity=66)
+# 'J' appeared once in 12000K12270V (YZ25G, capacity=108)
+compile_comment_dict = {
+    'B': '㊙️宿营车',
+    'C': '🎙️带广播室',
+    'D': '👮‍♀️带列车长办公席',
+    'H': '➡️联运出境',
+    'I': '↩️回转',
+    'L': '❌欠编',
+    'N': '♿️无障碍',
+    'O': '🎙️♿️无障碍+广播室',
+    'P': '👮‍♀️♿️无障碍+列车长办公席',
+    'Q': '🤫静音车厢'
+}
+# For interpreting the "origin". First digit is bureau, second digit represents 直通/管内.
+bureau_dict = {
+    'B': '哈局',
+    'C': '呼局',
+    'D': '锦局', 'L': '吉局', 'T': '沈局',
+    'F': '郑局',
+    'G': '南局', 'S': '福局',
+    'H': '上局', 'U': '新上局',
+    'J': '兰局',
+    'K': '济局', 'I': '济局',
+    'M': '昆局',
+    'N': '武局',
+    'O': '青藏',
+    'P': '京局',
+    'Q': '广铁', 'A': '新广铁',
+    'R': '乌局',
+    'V': '太局',
+    'W': '成局', 'E': '新成局',
+    'X': '境外',
+    'Y': '西局',
+    'Z': '宁局'
+}
+
 def queryPreseqTrainsByTrainCode(trainCode):
     '''
         Usage Unknown
@@ -110,6 +148,9 @@ def getBigScreenByStationCodeAndDate(stationCode, queryDate, DA_type='A') -> lis
     '''
     response = requests.get("https://wifi.12306.cn/wifiapps/appFrontEnd/v2/kpBigScreen/getBigScreenByStationCodeAndTrainDate?stationCode=%s&trainDate=%s&type=%s"%(stationCode, queryDate, DA_type), headers=header)
     return json_parser(response.content.decode('utf-8'))
+
+# For interpreting "status"
+bigscreen_status_dict = {1:'候车', 2:'开检', 3:'停检', 4:'正点', 5:'晚点', 6:'预计晚点', 7:'到站', 8:'停运'}
 
 def test_module(label, response, answer):
     if (response==answer):

@@ -27,11 +27,12 @@ After downloading the project, please run:
     │   └── train_wifi12306.py - query train info from `com.wifi12306`
     ├── railroad_lib        - Some helper libraries taken from other projs
     │   ├── __init__.py
+    │   ├── pids_realtime.py   - By AgFlore, for querying station's real-time PIDS board from `com.wifi12306`
     │   ├── query12306.py   - By Lifan Zhang, for timetable function
     │   ├── query_wifi12306.py   - By AgFlore, for querying information from `com.wifi12306`
     │   ├── train_history.py - helper file for train no.
     │   └── TrainNoDB.py    - a searchable db of train numbers. Saved for future functionalities.
-    └── requirements.txt    - python packages required 
+    └── requirements.txt    - python packages required
 
 ## Contributing
 

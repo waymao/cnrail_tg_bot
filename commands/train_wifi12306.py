@@ -83,12 +83,14 @@ def parse_compilation(train_no):
     if train_compile and (train_compile[0] != 'NO_DATA'):
         result_str = "Compilation: \n"
         for one_train in train_compile:
+            comment = one_train.get('commentCode')
+            comment_str = query_wifi12306.compile_comment_dict.get(comment, comment)
             result_str += "{}({}) {}{} {}\n".format(
                 one_train.get('coachNo'),
                 one_train.get('origin'),
                 one_train.get('coachType'),
                 str(one_train.get('limit1')).ljust(3),
-                one_train.get('commentCode'))
+                comment_str)
         return result_str
     return ""
 
