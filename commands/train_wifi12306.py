@@ -3,7 +3,7 @@
 # By AgFlore in 2021 based on waymao's work.
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 from telegram import ParseMode
 from telegram.ext import CommandHandler
@@ -94,6 +94,30 @@ def parse_compilation(train_no):
         return result_str
     return ""
 
+def parse_runrule(train_no, origin_date):
+    dates = [(origin_date + timedelta(days=i)).strftime("%Y%m%d") for i in range(-14-origin_date.weekday(), 21-origin_date.weekday())]
+    run_rule = query_wifi12306.getRunRuleByTrainNoAndDateRange(train_no, dates[0], dates[-1])
+    # only print if the run rule is non-trivial
+    if run_rule and isinstance(run_rule, dict) and (set(run_rule.values()) != {'1'}):
+        result_str = "The train runs on: \nMo Tu We Th Fr Sa Su\n"
+        weekday = 0
+        for date in dates:
+            rule = run_rule.get(date)
+            ans = '?'
+            if rule == '0':
+                ans = 'X'
+            elif rule == '1':
+                ans = str(int(date[-2:]))
+            elif rule:
+                ans = rule
+            result_str += "%s "%(ans.rjust(2))
+            weekday += 1
+            if weekday % 7 == 0:
+                result_str += "\n"
+        result_str += "\n"
+        return result_str
+    return ""
+
 def parse_equipment(train_no):
     train_equipment = query_wifi12306.getTrainEquipmentByTrainNo(train_no)
     if train_equipment and (train_equipment[0] != 'NO_DATA'):
@@ -128,7 +152,8 @@ def train_wifi(update, context):
     train_data = query_wifi12306.getStoptimeByTrainCode(train_code, date)
     if train_data[0] != 'NO_DATA':
         result_str = parse_timetable(train_data)
-        result_str += "\n<pre>%s</pre><pre>%s (%s - %s)\n%s</pre>\n<pre>%s</pre>"%(
+        result_str += "\n<pre>%s</pre><pre>%s</pre><pre>%s (%s - %s)\n%s</pre>\n<pre>%s</pre>"%(
+            parse_runrule(train_data[0].get("trainNo"), datetime.strptime(date, "%Y%m%d")),
             parse_guide(train_data),
             train_data[0].get("trainNo"),
             train_data[0].get('startDate'),
