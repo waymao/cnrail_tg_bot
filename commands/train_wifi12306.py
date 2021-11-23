@@ -2,6 +2,7 @@
 # Used to search for timetable on com.wifi12306 .
 # By AgFlore in 2021 based on waymao's work.
 
+import concurrent.futures
 import logging
 from datetime import datetime, timedelta
 import pytz
@@ -100,8 +101,7 @@ def parse_runrule(train_no, origin_date):
     # only print if the run rule is non-trivial
     if run_rule and isinstance(run_rule, dict) and (set(run_rule.values()) != {'1'}):
         result_str = "The train runs on: \nMo Tu We Th Fr Sa Su\n"
-        weekday = 0
-        for date in dates:
+        for weekday, date in enumerate(dates, start=1):
             rule = run_rule.get(date)
             ans = '?'
             if rule == '0':
@@ -111,7 +111,6 @@ def parse_runrule(train_no, origin_date):
             elif rule:
                 ans = rule
             result_str += "%s "%(ans.rjust(2))
-            weekday += 1
             if weekday % 7 == 0:
                 result_str += "\n"
         result_str += "\n"
@@ -152,14 +151,21 @@ def train_wifi(update, context):
     train_data = query_wifi12306.getStoptimeByTrainCode(train_code, date)
     if train_data[0] != 'NO_DATA':
         result_str = parse_timetable(train_data)
+        train_no = train_data[0].get("trainNo")
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            tasks = [future.result() for future in [
+                executor.submit(parse_runrule, train_no, datetime.strptime(date, "%Y%m%d")),
+                executor.submit(parse_compilation, train_no),
+                executor.submit(parse_equipment, train_no)]]
         result_str += "\n<pre>%s</pre><pre>%s</pre><pre>%s (%s - %s)\n%s</pre>\n<pre>%s</pre>"%(
-            parse_runrule(train_data[0].get("trainNo"), datetime.strptime(date, "%Y%m%d")),
+            tasks[0],
             parse_guide(train_data),
-            train_data[0].get("trainNo"),
+            train_no,
             train_data[0].get('startDate'),
             train_data[0].get('stopDate'),
-            parse_compilation(train_data[0].get("trainNo")),
-            parse_equipment(train_data[0].get("trainNo")))
+            tasks[1],
+            tasks[2]
+            )
 
         # Edit message, replace placeholder
         context.bot.edit_message_text(chat_id=update.message.chat_id, text=result_str, message_id=msg.message_id, parse_mode=ParseMode.HTML)
