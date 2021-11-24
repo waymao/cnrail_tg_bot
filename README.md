@@ -23,13 +23,16 @@ After downloading the project, please run:
     │   ├── basics.py       - Basic welcome module.
     │   ├── history.py      - query the history of the train. (for Shanghai and Beijing Railway EMUs.)
     │   ├── timetable.py    - timetable lookup module.
-    │   └── train_plan_graph.py - get the planning graph of the train no. using moerail.ml functionality.
+    │   ├── train_plan_graph.py - get the planning graph of the train no. using moerail.ml functionality.
+    │   └── train_wifi12306.py - query train info from `com.wifi12306`
     ├── railroad_lib        - Some helper libraries taken from other projs
     │   ├── __init__.py
+    │   ├── pids_realtime.py   - By AgFlore, for querying station's real-time PIDS board from `com.wifi12306`
     │   ├── query12306.py   - By Lifan Zhang, for timetable function
+    │   ├── query_wifi12306.py   - By AgFlore, for querying information from `com.wifi12306`
     │   ├── train_history.py - helper file for train no.
     │   └── TrainNoDB.py    - a searchable db of train numbers. Saved for future functionalities.
-    └── requirements.txt    - python packages required 
+    └── requirements.txt    - python packages required
 
 ## Contributing
 

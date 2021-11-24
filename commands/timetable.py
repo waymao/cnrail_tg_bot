@@ -20,15 +20,14 @@ tz = pytz.timezone('Asia/Shanghai')
 
 # function timetable
 # main handler for the command.
-@run_async
 def timetable(update, context):
     # Check valid args:
     if len(context.args) == 0:
         # calendar_func(bot, update)
-        update.message.reply_text(chat_id=update.message.chat_id, 
-            text="Please enter the train no. \
+        update.message.reply_text(text="Please enter the train no. \
                 The calendar function is being developed.",
             reply_to_message_id=update.message.message_id)
+        return
     if len(context.args) == 1:
         date = datetime.now(tz).strftime("%Y-%m-%d")
     elif len(context.args) != 2:
@@ -38,7 +37,7 @@ def timetable(update, context):
         return
     else:
         date = context.args[1]
-    
+
     # Loading...
     text = "Please wait while I retrieve the timetable..."
     msg = context.bot.send_message(chat_id=update.message.chat_id, text=text,
@@ -66,10 +65,10 @@ def timetable(update, context):
                 one_station["arrive_time"],
                 one_station["start_time"]
             )
-        
+
         # Edit message, replace placeholder
         context.bot.edit_message_text(chat_id=update.message.chat_id, text=result_str, message_id=msg.message_id)
-    
+
     # Error Handling.
     # KeyError: somehow 12306 returned something with status code != 200
     except (KeyError, json.JSONDecodeError):
@@ -93,9 +92,9 @@ def timetable(update, context):
             context.bot.edit_message_text(chat_id=update.message.chat_id,
                 text="Sorry. Could not establish a connection to the 12306 server.",
                 message_id=msg.message_id)
-    
+
     # Logs down each query.
     logging.info("User {} (id: {}) searched for train {}".format(update.message.from_user.username, update.message.from_user.id, train))
 
 # Add handler for the functions.
-timetable_handler = CommandHandler('tt', timetable, pass_args=True)
+timetable_handler = CommandHandler('tt', timetable, pass_args=True, run_async=True)
